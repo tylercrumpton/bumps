@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 
-message = "Testing one\ntwo three.\nfour five\nsix seven\neight nine\nten"
-message = "This is\ntwo lines"
+appearance = "left"
+message = "Dear DCTV,\nI heard some rumors about the Dragon Con\nmemberships and badges that feel strange and I\nwant you to help me suss out if they're fact or fiction.\nThanks!\n[ Andrew ]\n\nDear Andrew,\nSure, let's have at em."
 W,H = 1920,1080
 
 #img = Image.open("sample_in.jpg")
@@ -16,7 +16,10 @@ print(len(lines), "lines")
 _,_,_,lineheight = draw.textbbox((0,0), lines[0], font=font)
 print("Line height is", lineheight)
 
-draw.text((W/2, H/2), message, anchor="mm", align="center", font=font, fill='white')
+if appearance == "left":
+    draw.text((W/2, H/2), message, anchor="mm", align="left", font=font, fill='white', spacing=20)
+else:
+    draw.text((W/2, H/2), message, anchor="mm", align="center", font=font, fill='white')
 
 
 #_, _, w, h = draw.textbbox((0, 0), message, font=font)
