@@ -69,7 +69,13 @@ if appearance == "DearDCTV":
             yanchor = 89
 
             #overrides
-            if line.startswith("Dear "):
+            if len(sections) == 1:
+                print("There is exactly one section so I am centering everything")
+                xanchor = W/2
+                yanchor = H/2
+                anchor = "mm"
+                align = "center"
+            elif line.startswith("Dear "):
                 fill = "#ffff90" #yellow
             elif line.endswith("]"):
                 align = "right"
@@ -83,8 +89,5 @@ if appearance == "DearDCTV":
         print("WRITING:", filename)
         img.save(filename)
 
-
-else:
-    draw.text((W/2, H/2), message, anchor="mm", align="center", font=font, fill='white')
 
 
