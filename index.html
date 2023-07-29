@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 10px;
+      }
+      .image-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 10px;
+      }
+      .image-container img {
+        margin: 5px;
+        max-width: 400px;
+        width: 100%;
+        height: auto;
+      }
+      a {
+        margin-top: 10px;
+        display: block;
+        max-width: 170px;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        font-family: Helvetica, Arial, sans-serif;
+        text-decoration: none;
+        color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="image-container" id="imageContainer"></div>
+      <a id="downloadLink">Generating...</a>
+      <script>
+        "use strict";
+
+        async function main() {
+          const { loadPyodide } = await import(
+            "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.mjs"
+          );
+          // Download, extract, and run the bump generator script
+          globalThis.pyodide = await loadPyodide();
+          await pyodide.loadPackage("pillow");
+          await pyodide.runPythonAsync(`
+            from pyodide.http import pyfetch
+            import os
+            from zipfile import ZipFile
+
+            # Download the bump generator script
+            response = await pyfetch("bumps.zip")
+            await response.unpack_archive()
+            from frame import render
+
+            # Render the bumps (this creates a bunch of images)
+            count = render("yo yo yo\\n\\nsome more test")
+
+            # Zip the images
+            images = [f for f in os.listdir() if f.endswith(".png")]
+            with ZipFile("bump_images.zip", 'w') as archive:
+                for file in images:
+                    archive.write(file)
+        `);
+          // Access the global variables from Python
+          const count = pyodide.globals.get("count");
+          const images = pyodide.globals.get("images").toJs();
+
+          // Display the images
+          const imageContainer = document.getElementById("imageContainer");
+          for (let i = 0; i < count; i++) {
+            const data = pyodide.FS.readFile(images[i]);
+            const img = new Image();
+            img.src =
+              "data:image/png;base64," +
+              btoa(String.fromCharCode.apply(null, data));
+            imageContainer.appendChild(img);
+          }
+
+          // Create a download link for the zip file
+          const downloadLink = document.getElementById("downloadLink");
+          const zipData = pyodide.FS.readFile("bump_images.zip", {
+            encoding: "binary",
+          });
+          const blob = new Blob([zipData.buffer], { type: "application/zip" });
+          const url = URL.createObjectURL(blob);
+          downloadLink.setAttribute("href", url);
+          downloadLink.setAttribute("download", "bump_images.zip");
+          downloadLink.innerHTML = "Download All";
+        }
+
+        main();
+      </script>
+    </div>
+  </body>
+</html>
